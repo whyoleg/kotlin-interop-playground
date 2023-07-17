@@ -1,0 +1,16 @@
+syntax: glob
+
+**/.idea/*
+!/.idea/vcs.xml
+!/.idea/copyright
+!/.idea/codeStyles
+*.iml
+
+.gradle
+classes
+build/
+*.log
+/local.properties
+/docs/api
+/docs/modules
+/site
