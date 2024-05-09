@@ -1,0 +1,16 @@
+package = dev.whyoleg.kip.c.native.cinterop.libcrypto
+headerFilter = openssl/*
+headers = openssl/evp.h
+noStringConversion = OSSL_PARAM_construct_utf8_string
+
+# static libraries embedding configuration
+
+staticLibraries = libcrypto.a
+# libz.a is taken from mingw toolchain used in K/N
+staticLibraries.mingw = libz.a
+libraryPaths.mingw = src/mingwMain/libs
+
+linkerOpts.mingw = -lws2_32 -lcrypt32
+linkerOpts.linux = -lz
+linkerOpts.android = -lz
+linkerOpts.android_x86 = -latomic
