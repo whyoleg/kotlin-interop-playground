@@ -1,6 +1,6 @@
 [versions]
 
-kotlin = "2.0.0-RC2"
+kotlin = "2.0.0"
 android = "8.4.0"
 
 androidx-test = "1.5.2"
