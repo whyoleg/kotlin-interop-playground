@@ -1,4 +1,4 @@
-import kipbuild.bitcode.*
+import kipbuild.clang.*
 import kipbuild.kotlin.*
 import kipbuild.openssl.*
 import org.jetbrains.kotlin.gradle.*

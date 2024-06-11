@@ -1,27 +1,23 @@
-package kipbuild.bitcode
+package kipbuild.clang
 
 import org.gradle.api.file.*
-import org.gradle.api.provider.Provider
+import org.gradle.api.provider.*
 import org.gradle.api.tasks.*
 import org.jetbrains.kotlin.gradle.targets.native.toolchain.*
 import org.jetbrains.kotlin.konan.target.*
-import javax.inject.*
+import kotlin.reflect.*
 
+// `UsesKotlinNativeBundleBuildService` and `KotlinNativeProvider` are `internal` KGP APIs
 @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
-abstract class CompileToLlvmBitcode @Inject constructor(
+abstract class ClangKonanTask<T : ClangKonanTask<T>>(
     @get:Input val konanTarget: KonanTarget,
-) : AbstractExecTask<CompileToLlvmBitcode>(CompileToLlvmBitcode::class.java), UsesKotlinNativeBundleBuildService {
+    taskType: KClass<T>
+) : AbstractExecTask<T>(taskType.java), UsesKotlinNativeBundleBuildService {
 
     @get:Nested
     internal val kotlinNativeProvider: Provider<KotlinNativeProvider> = project.provider {
         KotlinNativeProvider(project, konanTarget, kotlinNativeBundleBuildService)
     }
-
-    @get:InputFiles
-    val includeDirs: ConfigurableFileCollection = objectFactory.fileCollection()
-
-    @get:InputFiles
-    val inputFiles: ConfigurableFileCollection = objectFactory.fileCollection()
 
     @get:OutputDirectory
     val outputDirectory: DirectoryProperty = objectFactory.directoryProperty().convention(
@@ -48,18 +44,6 @@ abstract class CompileToLlvmBitcode @Inject constructor(
         executable(provider.bundleDirectory.file("bin/run_konan").get().asFile.absolutePath)
         args("clang", "clang", konanTarget)
 
-        // emit llvm bitcode, which will be embedded afterwards
-        args("-emit-llvm", "-c")
-
-        // include dirs to search headers
-        includeDirs.forEach {
-            args("-I$it")
-        }
-
-        // input files
-        inputFiles.asFileTree.forEach {
-            args(it.absolutePath)
-        }
         super.exec()
     }
 }
