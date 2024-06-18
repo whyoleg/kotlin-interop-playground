@@ -4,10 +4,12 @@ package dev.whyoleg.kip.c.native.raw
 
 import kotlinx.cinterop.internal.*
 
-// returns pointer
+// magic :)
+// defined as `# define OPENSSL_VERSION_STRING 6`
+const val OPENSSL_VERSION_STRING = 6
+
 @CCall("ffi_OpenSSL_version")
-internal external fun ffi_OpenSSL_version(type: Int): Long
+external fun OpenSSL_version(type: Int): Pointer_Byte
 
 @CCall("ffi_OPENSSL_version_major")
-internal external fun ffi_OPENSSL_version_major(): Int
-
+external fun OPENSSL_version_major(): Int
