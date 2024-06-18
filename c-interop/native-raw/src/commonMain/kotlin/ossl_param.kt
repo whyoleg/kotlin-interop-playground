@@ -33,7 +33,7 @@ external fun OSSL_PARAM_get_int(
     v: Pointer_Int
 ): Int
 
-@CCall("ffi_OSSL_PARAM_OSSL_PARAM_construct_end")
+@CCall("ffi_OSSL_PARAM_construct_end")
 external fun OSSL_PARAM_construct_end(returnPointer: Pointer_OSSL_PARAM)
 
 @OptIn(UnsafeNumber::class)

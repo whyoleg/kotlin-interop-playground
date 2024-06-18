@@ -107,48 +107,55 @@ class NativeRawTest {
         assertEquals(OSSL_PARAM_INTEGER.convert(), data_type)
         assertEquals("field", key?.toKString())
     }
-//
-//    @Test
-//    fun test6_hmac() = memScoped {
-//        val dataInput = "Hi There".encodeToByteArray()
-//        val key = "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b".hexToByteArray()
-//
-//        val mac = EVP_MAC_fetch(null, "HMAC", null)
-//        val context = EVP_MAC_CTX_new(mac)
-//        try {
-//            val params = listOf(
-//                OSSL_PARAM_construct_utf8_string("digest".cstr.ptr, "SHA256".cstr.ptr, 0U),
-//                OSSL_PARAM_construct_end()
-//            )
-//            val paramsArray = allocArray<OSSL_PARAM>(params.size)
-//            params.forEachIndexed { index, value ->
-//                value.place(paramsArray[index].ptr)
-//            }
-//
-//            key.asUByteArray().usePinned {
-//                check(
-//                    EVP_MAC_init(
-//                        ctx = context,
-//                        key = it.addressOf(0),
-//                        keylen = key.size.convert(),
-//                        params = paramsArray
-//                    ) > 0
-//                )
-//            }
-//
-//            val signature = ByteArray(EVP_MAC_CTX_get_mac_size(context).convert())
-//
-//            dataInput.asUByteArray().usePinned {
-//                check(EVP_MAC_update(context, it.addressOf(0), dataInput.size.convert()) > 0)
-//            }
-//            signature.asUByteArray().usePinned {
-//                check(EVP_MAC_final(context, it.addressOf(0), null, signature.size.convert()) > 0)
-//            }
-//
-//            assertEquals("b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7", signature.toHexString())
-//        } finally {
-//            EVP_MAC_CTX_free(context)
-//            EVP_MAC_free(mac)
-//        }
-//    }
+
+    @Test
+    fun test6_hmac() = memScoped {
+        val dataInput = "Hi There".encodeToByteArray()
+        val key = "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b".hexToByteArray()
+
+        val mac = EVP_MAC_fetch(0, "HMAC".cstr.ptr.toLong(), 0)
+        val context = EVP_MAC_CTX_new(mac)
+        try {
+            val paramsArray = alloc(
+                size = size_off_OSSL_PARAM().convert<Int>() * 2, // 2 elements array
+                align = align_off_OSSL_PARAM().convert()
+            )
+            OSSL_PARAM_construct_utf8_string(
+                key = "digest".cstr.ptr.toLong(),
+                buf = "SHA256".cstr.ptr.toLong(),
+                bsize = 0.convert(),
+                // put a first element
+                returnPointer = paramsArray.rawPtr.toLong()
+            )
+            OSSL_PARAM_construct_end(
+                // put a second element
+                returnPointer = (paramsArray.rawPtr + size_off_OSSL_PARAM().convert()).toLong()
+            )
+
+            key.asUByteArray().usePinned {
+                check(
+                    EVP_MAC_init(
+                        ctx = context,
+                        key = it.addressOf(0).toLong(),
+                        keylen = key.size.convert(),
+                        params = paramsArray.rawPtr.toLong()
+                    ) > 0
+                )
+            }
+
+            val signature = ByteArray(EVP_MAC_CTX_get_mac_size(context).convert())
+
+            dataInput.asUByteArray().usePinned {
+                check(EVP_MAC_update(context, it.addressOf(0).toLong(), dataInput.size.convert()) > 0)
+            }
+            signature.asUByteArray().usePinned {
+                check(EVP_MAC_final(context, it.addressOf(0).toLong(), 0, signature.size.convert()) > 0)
+            }
+
+            assertEquals("b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7", signature.toHexString())
+        } finally {
+            EVP_MAC_CTX_free(context)
+            EVP_MAC_free(mac)
+        }
+    }
 }
