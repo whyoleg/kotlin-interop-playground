@@ -15,7 +15,7 @@ abstract class CompileToLlvmBitcode @Inject constructor(
     @get:InputFiles
     val inputFiles: ConfigurableFileCollection = objectFactory.fileCollection()
 
-    override fun exec() {
+    override fun setup() {
         // emit llvm bitcode, which will be embedded afterwards
         args("-emit-llvm", "-c")
 
@@ -28,6 +28,5 @@ abstract class CompileToLlvmBitcode @Inject constructor(
         inputFiles.asFileTree.forEach {
             args(it.absolutePath)
         }
-        super.exec()
     }
 }

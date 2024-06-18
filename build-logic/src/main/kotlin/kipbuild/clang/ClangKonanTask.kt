@@ -28,7 +28,9 @@ abstract class ClangKonanTask<T : ClangKonanTask<T>>(
         )
     )
 
-    override fun exec() {
+    protected abstract fun setup()
+
+    final override fun exec() {
         val provider = kotlinNativeProvider.get()
 
         // recreate output directory
@@ -43,6 +45,8 @@ abstract class ClangKonanTask<T : ClangKonanTask<T>>(
         // run clang vis K/N toolchain
         executable(provider.bundleDirectory.file("bin/run_konan").get().asFile.absolutePath)
         args("clang", "clang", konanTarget)
+
+        setup()
 
         super.exec()
     }
