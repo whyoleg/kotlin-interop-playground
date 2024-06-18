@@ -85,6 +85,7 @@ class NativeCInteropTest {
 
         // access struct fields
         param.useContents {
+            assertEquals(value, data?.reinterpret<IntVar>()?.pointed?.value)
             assertEquals(OSSL_PARAM_INTEGER.convert(), data_type)
             assertEquals("field", key?.toKString())
         }
