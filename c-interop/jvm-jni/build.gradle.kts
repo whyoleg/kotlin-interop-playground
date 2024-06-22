@@ -1,43 +1,42 @@
 import kipbuild.*
+import kipbuild.clang.*
 import kipbuild.openssl.*
 import org.jetbrains.kotlin.konan.target.*
 
 plugins {
     id("kipbuild.kotlin.jvm")
     id("kipbuild.openssl")
-    id("kipbuild.jextract")
 }
 
-val runJextractTask = jextract.registerTask("runJextract") {
-    mainHeader.set(openssl.includeDirectory(HOST.toOpensslTarget()).map {
-        it.file("openssl/evp.h")
-    })
-    libraries.add("crypto")
-    includeDirectory.set(openssl.includeDirectory(HOST.toOpensslTarget()))
-    packageName.set("dev.whyoleg.kip.c.jvm.ffm.jextract.generated")
-}
+val compileMacosArm64Jni = tasks.register<CompileJni>(
+    "compileMacosArm64Jni",
+    KonanTarget.MACOS_ARM64
+)
 
-// needed to generate sources during IDEA import
-(tasks.findByPath("prepareKotlinIdeaImport") ?: tasks.create("prepareKotlinIdeaImport")).dependsOn(runJextractTask)
+compileMacosArm64Jni.configure {
+    inputFiles.from("src/main/c")
+    includeDirs.from(openssl.includeDirectory(HOST.toOpensslTarget()))
+    linkPaths.add(openssl.libDirectory(HOST.toOpensslTarget()).map { it.asFile.absolutePath })
+    linkLibraries.add("crypto")
+    outputLibraryName.set("crypto-jni")
+}
 
 kotlin {
-    jvmToolchain(22)
+    jvmToolchain(8)
+}
+
+tasks.processResources {
+    from(compileMacosArm64Jni) {
+        into("libs/macos-arm64")
+    }
 }
 
 dependencies {
     testImplementation(kotlin("test"))
 }
 
-sourceSets {
-    main {
-        java.srcDir(runJextractTask)
-    }
-}
-
 tasks.test {
     dependsOn(openssl.setupTask)
-    // to suppress warning
-    jvmArgs("--enable-native-access=ALL-UNNAMED")
 
     when (HOST) {
         KonanTarget.LINUX_X64                          -> environment(

@@ -1,4 +1,4 @@
-import kipbuild.jextract.*
+import kipbuild.*
 import kipbuild.openssl.*
 import org.jetbrains.kotlin.konan.target.*
 

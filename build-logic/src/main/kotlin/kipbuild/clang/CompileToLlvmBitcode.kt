@@ -21,7 +21,7 @@ abstract class CompileToLlvmBitcode @Inject constructor(
 
         // include dirs to search headers
         includeDirs.forEach {
-            args("-I$it")
+            args("-I${it.absolutePath}")
         }
 
         // input files

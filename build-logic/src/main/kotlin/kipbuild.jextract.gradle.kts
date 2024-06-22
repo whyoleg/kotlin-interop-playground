@@ -1,3 +1,4 @@
+import kipbuild.*
 import kipbuild.jextract.*
 import org.jetbrains.kotlin.konan.target.*
 

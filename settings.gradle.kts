@@ -28,6 +28,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "kotlin-interop-playground"
 
+include("c-interop:android-jni")
 include("c-interop:jvm-jni")
 include("c-interop:jvm-jna")
 include("c-interop:jvm-jnr")
