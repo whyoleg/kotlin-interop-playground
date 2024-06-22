@@ -31,7 +31,7 @@ rootProject.name = "kotlin-interop-playground"
 include("c-interop:jvm-jni")
 include("c-interop:jvm-jna")
 include("c-interop:jvm-jnr")
-include("c-interop:jvm-ffm")
+include("c-interop:jvm-ffm-raw")
 include("c-interop:jvm-ffm-jextract")
 
 include("c-interop:native-cinterop")
