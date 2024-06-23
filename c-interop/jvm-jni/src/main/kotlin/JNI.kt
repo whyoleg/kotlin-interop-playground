@@ -1,14 +1,22 @@
 package dev.whyoleg.kip.c.jvm.jni
 
+import java.nio.*
 import java.nio.file.*
 import kotlin.io.path.*
 
-object FFI {
+object JNI {
     init {
-        // first load actual library, then jni for it
-        System.loadLibrary("crypto")
         System.load(extractJniLibraryFromJar("crypto-jni").absolutePathString())
     }
+
+    @JvmStatic
+    external fun getByteBufferFromPointer(pointer: Long, size: Int): ByteBuffer?
+
+    @JvmStatic
+    external fun getPointerFromByteBuffer(buffer: ByteBuffer?): Long
+
+    @JvmStatic
+    external fun getStringFromPointer(pointer: Long): String?
 }
 
 private fun extractJniLibraryFromJar(name: String): Path {
@@ -25,7 +33,7 @@ private fun extractJniLibraryFromJar(name: String): Path {
         "arm64", "aarch64" -> "arm64"
         else               -> error("Unsupported architecture: $arch")
     }
-    return FFI::class.java.classLoader.getResourceAsStream(
+    return JNI::class.java.classLoader.getResourceAsStream(
         "libs/$os-$arch/$libraryName"
     )!!.use { library ->
         createTempFile(suffix = libraryName).also {
