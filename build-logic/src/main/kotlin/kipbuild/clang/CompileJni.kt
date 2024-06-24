@@ -61,11 +61,6 @@ abstract class CompileJni @Inject constructor(
         args(linkPaths.get().map { "-L$it" })
         args(linkLibraries.get().map { "-l$it" })
 
-        // input files
-        inputFiles.asFileTree.forEach {
-            args(it.absolutePath)
-        }
-
         val shortLibraryName = outputLibraryName.get()
         val fullLibraryName = when (konanTarget) {
             KonanTarget.LINUX_X64                          -> "lib${shortLibraryName}.so"
@@ -76,5 +71,10 @@ abstract class CompileJni @Inject constructor(
 
         // output path
         args("-o", fullLibraryName)
+
+        // input files
+        inputFiles.asFileTree.forEach {
+            args(it.absolutePath)
+        }
     }
 }
