@@ -48,7 +48,8 @@ abstract class LinkWasm @Inject constructor(
 
         executable(emcc.get())
         args("--no-entry")
-        // args("-s", "EXPORTED_FUNCTIONS=_free")
+        args("-s", "EXPORTED_FUNCTIONS=_free,_malloc")
+        args("-s", "EXPORTED_RUNTIME_METHODS=UTF8ToString")
 
         // link paths/libs
         args(linkPaths.get().map { "-L$it" })

@@ -3,37 +3,40 @@ package dev.whyoleg.kip.c.wasm.emscripten
 import kotlin.test.*
 
 @OptIn(
-    ExperimentalStdlibApi::class,
-    ExperimentalUnsignedTypes::class
+    ExperimentalStdlibApi::class
 )
 class WasmEmscriptenTest {
 
     @Test
     fun test1_simpleFunctionCalls() {
         // returns primitive
-        val majorVersion = crypto.OPENSSL_version_major()
+        val majorVersion = ffi.OPENSSL_version_major()
         assertEquals(3, majorVersion)
 
         // accepts a primitive, returns pointer to a String
-//        val stringVersion = OpenSSL_version(OPENSSL_VERSION_STRING)
-//        assertEquals("3.2.0", stringVersion.toCPointer<ByteVar>()?.toKString())
+        val stringVersion = ffi.OpenSSL_version(OPENSSL_VERSION_STRING)
+        assertEquals("3.2.0", ffi.UTF8ToString(stringVersion))
     }
 
-//    @Test
-//    fun test2_pointers() = memScoped {
-//        // accepts pointers, returns pointer to an opaque struct
-//        val md = EVP_MD_fetch(0, "SHA256".cstr.ptr.toLong(), 0)
-//
-//        try {
-//            // accepts pointer, returns primitive
-//            val digestSize = EVP_MD_get_size(md)
-//            assertEquals(32, digestSize)
-//        } finally {
-//            // needs cleanup
-//            EVP_MD_free(md)
-//        }
-//    }
-//
+    @Test
+    fun test2_pointers() {
+        // accepts pointers, returns pointer to an opaque struct
+
+        val md = "SHA256".useAsPointer {
+            ffi.EVP_MD_fetch(0, it, 0)
+        }
+
+        try {
+            // accepts pointer, returns primitive
+            val digestSize = ffi.EVP_MD_get_size(md)
+            assertEquals(32, digestSize)
+        } finally {
+            // needs cleanup
+            ffi.EVP_MD_free(md)
+        }
+    }
+
+    //
 //    @Test
 //    fun test3_bytes() {
 //        val data = byteArrayOf(1, 2, 3)
@@ -45,65 +48,67 @@ class WasmEmscriptenTest {
 //        }
 //    }
 //
-//    @Test
-//    fun test4_digest() = memScoped {
-//        val md = EVP_MD_fetch(0, "SHA256".cstr.ptr.toLong(), 0)
-//        val context = EVP_MD_CTX_new()
-//        try {
-//            val data = "Hello World".encodeToByteArray()
-//            val digest = ByteArray(EVP_MD_get_size(md))
-//
-//            check(EVP_DigestInit(context, md) == 1)
-//            data.usePinned {
-//                check(EVP_DigestUpdate(context, it.addressOf(0).toLong(), data.size.convert()) == 1)
-//            }
-//            digest.asUByteArray().usePinned {
-//                check(EVP_DigestFinal(context, it.addressOf(0).toLong(), 0) == 1)
-//            }
-//
-//            assertEquals("a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e", digest.toHexString())
-//        } finally {
-//            EVP_MD_CTX_free(context)
-//            EVP_MD_free(md)
-//        }
-//    }
-//
-//    @Test
-//    fun test5_structs() = memScoped {
-//        val value = 123
-//        // returns struct, accepts pointers
-//
-//        // size=40, align=8 for macosArm64
-//        val struct = alloc(
-//            size = size_off_OSSL_PARAM().convert(),
-//            align = align_off_OSSL_PARAM().convert()
-//        )
-//        val structPointer = struct.rawPtr.toLong()
-//        val valueInput = alloc(value)
-//        OSSL_PARAM_construct_int("field".cstr.ptr.toLong(), valueInput.ptr.toLong(), structPointer)
-//        val valueOutput = alloc<IntVar>()
-//
-//        assertEquals(0, valueOutput.value)
-//        // accepts pointers, returns result if operation is success
-//        check(OSSL_PARAM_get_int(structPointer, valueOutput.ptr.toLong()) > 0)
-//        assertEquals(value, valueOutput.value)
-//
-//        // access struct fields
-//        val data = interpretPointed<CPointerVarOf<CPointer<IntVar>>>(
-//            struct.rawPtr + offset_off_data_OSSL_PARAM().convert()
-//        ).pointed?.value
-//
-//        val data_type = interpretPointed<IntVar>(
-//            struct.rawPtr + offset_off_data_type_OSSL_PARAM().convert()
-//        ).value
-//
-//        val key = interpretPointed<CPointerVarOf<CPointer<ByteVar>>>(
-//            struct.rawPtr + offset_off_key_OSSL_PARAM().convert()
-//        ).value
-//        assertEquals(value, data)
-//        assertEquals(OSSL_PARAM_INTEGER.convert(), data_type)
-//        assertEquals("field", key?.toKString())
-//    }
+    @Test
+    fun test4_digest() {
+        val md = "SHA256".useAsPointer {
+            ffi.EVP_MD_fetch(0, it, 0)
+        }
+        val context = ffi.EVP_MD_CTX_new()
+        try {
+            val data = "Hello World".encodeToByteArray()
+            val digest = ByteArray(ffi.EVP_MD_get_size(md))
+
+            check(ffi.EVP_DigestInit(context, md) == 1)
+            data.useAsPointer(copyBefore = true, copyAfter = false) {
+                check(ffi.EVP_DigestUpdate(context, it, data.size) == 1)
+            }
+            digest.useAsPointer(copyBefore = false, copyAfter = true) {
+                check(ffi.EVP_DigestFinal(context, it, 0) == 1)
+            }
+
+            assertEquals("a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e", digest.toHexString())
+        } finally {
+            ffi.EVP_MD_CTX_free(context)
+            ffi.EVP_MD_free(md)
+        }
+    }
+
+    @Test
+    fun test5_structs() {
+        val value = 123
+        // returns struct, accepts pointers
+
+        // size=40, align=8 for macosArm64
+        val structPointer = ffi.malloc(OSSL_PARAM.size)
+        val valueInput = ffi.malloc(Int.SIZE_BYTES)
+        ffi.HEAPU32[valueInput / 4] = value
+
+        val fieldPointer = "field".toPointer()
+        ffi.OSSL_PARAM_construct_int(fieldPointer, valueInput, structPointer)
+
+        val valueOutput = ffi.malloc(Int.SIZE_BYTES)
+        ffi.HEAPU32[valueOutput / 4] = 0 // we need to manually free it :)
+
+        assertEquals(0, ffi.HEAPU32[valueOutput / 4])
+        // accepts pointers, returns result if operation is success
+        check(ffi.OSSL_PARAM_get_int(structPointer, valueOutput) > 0)
+        assertEquals(value, ffi.HEAPU32[valueOutput / 4])
+
+        val key = ffi.UTF8ToString(ffi.HEAPU32[(structPointer + OSSL_PARAM.key_offset) / 4])
+        val data_type = ffi.HEAPU32[(structPointer + OSSL_PARAM.data_type_offset) / 4]
+        val data = ffi.HEAPU32[
+            (ffi.HEAPU32[(structPointer + OSSL_PARAM.data_offset) / 4]) / 4
+        ]
+
+        assertEquals(value, data)
+        assertEquals(OSSL_PARAM_INTEGER, data_type)
+        assertEquals("field", key)
+
+        ffi.free(fieldPointer)
+        ffi.free(valueOutput)
+        ffi.free(valueInput)
+        ffi.free(structPointer)
+    }
 //
 //    @Test
 //    fun test6_hmac() = memScoped {

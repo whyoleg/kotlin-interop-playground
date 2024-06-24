@@ -92,10 +92,25 @@ EMSCRIPTEN_KEEPALIVE void ffi_OSSL_PARAM_construct_utf8_string (
     *p_returnPointer = OSSL_PARAM_construct_utf8_string(p_key, p_buf, p_bsize);
 }
 
+EMSCRIPTEN_KEEPALIVE void ffi_OSSL_PARAM_construct_int (
+  char* p_key,
+  int* p_buf,
+  OSSL_PARAM* p_returnPointer
+) {
+    *p_returnPointer = OSSL_PARAM_construct_int(p_key, p_buf);
+}
+
 EMSCRIPTEN_KEEPALIVE void ffi_OSSL_PARAM_construct_end (
   OSSL_PARAM* p_returnPointer
 ) {
     *p_returnPointer = OSSL_PARAM_construct_end();
+}
+
+EMSCRIPTEN_KEEPALIVE int ffi_OSSL_PARAM_get_int (
+  OSSL_PARAM* p_p,
+  int* p_val
+) {
+    return OSSL_PARAM_get_int(p_p, p_val);
 }
 
 //osslparam end
@@ -161,129 +176,3 @@ EMSCRIPTEN_KEEPALIVE void ffi_EVP_MAC_free (
 }
 
 //evpmac end
-
-//evppkey start
-
-EMSCRIPTEN_KEEPALIVE unsigned int ffi_EVP_PKEY_keygen_init (
-  EVP_PKEY_CTX* p_ctx
-) {
-    return EVP_PKEY_keygen_init(p_ctx);
-}
-
-EMSCRIPTEN_KEEPALIVE unsigned int ffi_EVP_PKEY_generate (
-  EVP_PKEY_CTX* p_ctx,
-  EVP_PKEY** p_ppkey
-) {
-    return EVP_PKEY_generate(p_ctx, p_ppkey);
-}
-
-EMSCRIPTEN_KEEPALIVE unsigned int ffi_EVP_PKEY_up_ref (
-  EVP_PKEY* p_pkey
-) {
-    return EVP_PKEY_up_ref(p_pkey);
-}
-
-EMSCRIPTEN_KEEPALIVE void ffi_EVP_PKEY_free (
-  EVP_PKEY* p_pkey
-) {
-    EVP_PKEY_free(p_pkey);
-}
-
-//evppkey end
-//evppkeyctx start
-
-EMSCRIPTEN_KEEPALIVE EVP_PKEY_CTX* ffi_EVP_PKEY_CTX_new_from_name (
-  OSSL_LIB_CTX* p_libctx,
-  char* p_name,
-  char* p_propquery
-) {
-    return EVP_PKEY_CTX_new_from_name(p_libctx, p_name, p_propquery);
-}
-
-EMSCRIPTEN_KEEPALIVE unsigned int ffi_EVP_PKEY_CTX_set_params (
-  EVP_PKEY_CTX* p_ctx,
-  OSSL_PARAM* p_params
-) {
-    return EVP_PKEY_CTX_set_params(p_ctx, p_params);
-}
-
-EMSCRIPTEN_KEEPALIVE void ffi_EVP_PKEY_CTX_free (
-  EVP_PKEY_CTX* p_ctx
-) {
-    EVP_PKEY_CTX_free(p_ctx);
-}
-
-//evppkeyctx end
-//evpdigest start
-
-EMSCRIPTEN_KEEPALIVE unsigned int ffi_EVP_DigestSignInit_ex (
-  EVP_MD_CTX* p_ctx,
-  EVP_PKEY_CTX** p_pctx,
-  char* p_mdname,
-  OSSL_LIB_CTX* p_libctx,
-  char* p_props,
-  EVP_PKEY* p_pkey,
-  OSSL_PARAM* p_params
-) {
-    return EVP_DigestSignInit_ex(
-        p_ctx,
-        p_pctx,
-        p_mdname,
-        p_libctx,
-        p_props,
-        p_pkey,
-        p_params
-    );
-}
-
-EMSCRIPTEN_KEEPALIVE unsigned int ffi_EVP_DigestSignUpdate (
-  EVP_MD_CTX* p_ctx,
-  void* p_data,
-  unsigned int p_dsize
-) {
-    return EVP_DigestSignUpdate(p_ctx, p_data, p_dsize);
-}
-EMSCRIPTEN_KEEPALIVE unsigned int ffi_EVP_DigestSignFinal (
-  EVP_MD_CTX* p_ctx,
-  unsigned char* p_sigret,
-  unsigned long* p_siglen
-) {
-    return EVP_DigestSignFinal(p_ctx, p_sigret, p_siglen);
-}
-
-EMSCRIPTEN_KEEPALIVE unsigned int ffi_EVP_DigestVerifyInit_ex (
-  EVP_MD_CTX* p_ctx,
-  EVP_PKEY_CTX** p_pctx,
-  char* p_mdname,
-  OSSL_LIB_CTX* p_libctx,
-  char* p_props,
-  EVP_PKEY* p_pkey,
-  OSSL_PARAM* p_params
-) {
-    return EVP_DigestVerifyInit_ex(
-        p_ctx,
-        p_pctx,
-        p_mdname,
-        p_libctx,
-        p_props,
-        p_pkey,
-        p_params
-    );
-}
-
-EMSCRIPTEN_KEEPALIVE unsigned int ffi_EVP_DigestVerifyUpdate (
-  EVP_MD_CTX* p_ctx,
-  void* p_data,
-  unsigned int p_dsize
-) {
-    return EVP_DigestVerifyUpdate(p_ctx, p_data, p_dsize);
-}
-EMSCRIPTEN_KEEPALIVE unsigned int ffi_EVP_DigestVerifyFinal (
-  EVP_MD_CTX* p_ctx,
-  unsigned char* p_sig,
-  unsigned int p_siglen
-) {
-    return EVP_DigestVerifyFinal(p_ctx, p_sig, p_siglen);
-}
-
-//evpdigest end
